@@ -19,6 +19,9 @@ public:
     string arreglo_tipo_digitos[100];
     string arreglo_tipo_flotantess[100];
     string arreglo_aritmetico[100];
+    string arreglo_asignacion[100];
+    string arreglo_identificador[100];
+    int tam_datos=0;
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
     void analizarLexemas(); // Se encarga de llamar a todas las funciones que analizan los lexemas para que en el main sólo tengamos que llamar a esta función.
@@ -27,6 +30,8 @@ public:
     void lexemasDigitos();
     void lexemasDigitosFlotantes();
     void lexemasAritmeticos();
+    void lexemasAsignacion();
+    void lexemasIdentificador();
 };
 
 void CrearTokens::crearArchivo(string nombre_archivo) {
@@ -42,6 +47,8 @@ void CrearTokens::analizarLexemas() {
     lexemasDigitos();
     lexemasDigitosFlotantes();
     lexemasAritmeticos();
+    lexemasAsignacion();
+    lexemasIdentificador();
 }
 
 void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
@@ -96,6 +103,7 @@ void CrearTokens::lexemasDatos() {
     }
 
     archivo_entrada.close();
+    tam_datos = tamanio_arreglo;
     //cout<<"Analizar: "<<analizar<<"\n";
 
     tablaTokens(arreglo_tipo_datos, tamanio_arreglo, tipo_token);
@@ -169,13 +177,74 @@ void CrearTokens::lexemasAritmeticos() {
             palabra = texto;
             arreglo_aritmetico[tamanio_arreglo] = palabra;
             tamanio_arreglo++;
-            cout<<"Match flotante: "<<palabra<<"\n";
+            cout<<"Match aritmético: "<<palabra<<"\n";
         }
     }
 
     archivo_entrada.close();
 
     tablaTokens(arreglo_aritmetico, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::lexemasAsignacion() {
+    regex rex ("([*/%+-]?=)");
+    string texto="", palabra="", tipo_token="AS"; 
+    int tamanio_arreglo=0;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        if(regex_match(texto, rex)) {
+            palabra = texto;
+            arreglo_asignacion[tamanio_arreglo] = palabra;
+            tamanio_arreglo++;
+            cout<<"Match asignación: "<<palabra<<"\n";
+        }
+    }
+
+    archivo_entrada.close();
+
+    tablaTokens(arreglo_asignacion, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::lexemasIdentificador() {
+    regex rex ("([a-zA-Z_$][a-zA-Z_$0-9]*)");
+    string texto="", palabra="", tipo_token="ID"; 
+    int tamanio_arreglo=0;
+    bool bandera=true;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador
+            for (int i = 0; i < tam_datos; i++) {
+                if(texto == arreglo_tipo_datos[i]) {
+                    bandera=false;
+                }
+            }
+            if(bandera) {
+                palabra = texto;
+                arreglo_identificador[tamanio_arreglo] = palabra;
+                tamanio_arreglo++;
+                cout<<"Match identificador: "<<palabra<<"\n";
+            }
+            bandera=true;
+        }
+    }
+
+    archivo_entrada.close();
+
+    tablaTokens(arreglo_identificador, tamanio_arreglo, tipo_token);
 }
 
 
