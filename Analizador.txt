@@ -1,0 +1,4 @@
+int funcion ( int hola , string palabra )
+ {
+ 1 + b = 4.8 + 4.8 - 1.1 ;
+ }
