@@ -23,6 +23,7 @@ public:
     string arreglo_identificador[100];
     string arreglo_operador_relacional[100];
     string arreglo_delimitadores[100];
+    string arreglo_miscelaneos[100];
     int tam_datos=0;
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
@@ -36,6 +37,7 @@ public:
     void lexemasIdentificador();
     void lexemasOperadoresRel();
     void lexemasDelimitadores();
+    void lexemasMiscelaneos();
 };
 
 void CrearTokens::crearArchivo(string nombre_archivo) {
@@ -55,6 +57,7 @@ void CrearTokens::analizarLexemas() {
     lexemasIdentificador();
     lexemasOperadoresRel();
     lexemasDelimitadores();
+    lexemasMiscelaneos();
 }
 
 void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
@@ -70,6 +73,7 @@ void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
 }
 
 void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token) {
+    int contador=1;
     archivoEscritura.open("TablaTokens.txt", ios::app); 
     if (archivoEscritura.fail()) {
         cout<<"Error al abrir el archivo\n";
@@ -79,7 +83,8 @@ void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token
     revisarRepetidos(arreglo, tamanio_arreglo);
     for (int i = 0; i < tamanio_arreglo; i++) {
         if(arreglo[i] != ""){
-            archivoEscritura<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<"\n";  
+            archivoEscritura<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<contador<<"\n";
+            contador++;  
         }
     }
     archivoEscritura.close();
@@ -309,6 +314,38 @@ void CrearTokens::lexemasDelimitadores() {
     archivo_entrada.close();
 
     tablaTokens(arreglo_delimitadores, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::lexemasMiscelaneos() {
+    regex rex ("([,;:])");   
+    string texto="", palabra="", tipo_token="SEP"; 
+    int tamanio_arreglo=0, palabra_borrar=0;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        palabra_borrar= texto.find_last_not_of("\n");   // En esta parte eliminamos los saltos de línea para poder revisar correctamente el lexema.
+        //cout<<"Texto antes: "<<texto<<"\n";
+        if(palabra_borrar != std::string::npos){
+            texto.erase(palabra_borrar+1);
+        }
+        //cout<<"Texto después: "<<texto<<"\n";
+        if(regex_match(texto, rex)) {
+            palabra = texto;
+            arreglo_miscelaneos[tamanio_arreglo] = palabra;
+            tamanio_arreglo++;
+            cout<<"Match separador: "<<palabra<<"\n";
+        }
+    }
+
+    archivo_entrada.close();
+
+    tablaTokens(arreglo_miscelaneos, tamanio_arreglo, tipo_token);
 }
 
 
