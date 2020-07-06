@@ -21,6 +21,8 @@ public:
     string arreglo_aritmetico[100];
     string arreglo_asignacion[100];
     string arreglo_identificador[100];
+    string arreglo_operador_relacional[100];
+    string arreglo_delimitadores[100];
     int tam_datos=0;
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
@@ -32,6 +34,8 @@ public:
     void lexemasAritmeticos();
     void lexemasAsignacion();
     void lexemasIdentificador();
+    void lexemasOperadoresRel();
+    void lexemasDelimitadores();
 };
 
 void CrearTokens::crearArchivo(string nombre_archivo) {
@@ -49,6 +53,8 @@ void CrearTokens::analizarLexemas() {
     lexemasAritmeticos();
     lexemasAsignacion();
     lexemasIdentificador();
+    lexemasOperadoresRel();
+    lexemasDelimitadores();
 }
 
 void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
@@ -64,7 +70,7 @@ void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
 }
 
 void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token) {
-    archivoEscritura.open("TablaTokens.txt", ios::app); // Se puede meter en una función a la que se le enviaría el arreglo, el tamaño del arreglo y el token
+    archivoEscritura.open("TablaTokens.txt", ios::app); 
     if (archivoEscritura.fail()) {
         cout<<"Error al abrir el archivo\n";
         exit(1);
@@ -73,7 +79,7 @@ void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token
     revisarRepetidos(arreglo, tamanio_arreglo);
     for (int i = 0; i < tamanio_arreglo; i++) {
         if(arreglo[i] != ""){
-            archivoEscritura<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<"\n";  // Una idea es poner el token determinado en el cout y quitar la variable
+            archivoEscritura<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<"\n";  
         }
     }
     archivoEscritura.close();
@@ -245,6 +251,64 @@ void CrearTokens::lexemasIdentificador() {
     archivo_entrada.close();
 
     tablaTokens(arreglo_identificador, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::lexemasOperadoresRel() {
+    regex rex ("([<|>|!][=]?)");
+    string texto="", palabra="", tipo_token="OR"; 
+    int tamanio_arreglo=0;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        if(regex_match(texto, rex)) {
+            palabra = texto;
+            arreglo_operador_relacional[tamanio_arreglo] = palabra;
+            tamanio_arreglo++;
+            cout<<"Match operador rel: "<<palabra<<"\n";
+        }
+    }
+
+    archivo_entrada.close();
+
+    tablaTokens(arreglo_operador_relacional, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::lexemasDelimitadores() {
+    regex rex ("([\\[\\{\\}\\]\\)\\(])");   
+    string texto="", palabra="", tipo_token="DEL"; 
+    int tamanio_arreglo=0, palabra_borrar=0;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        palabra_borrar= texto.find_last_not_of("\n");   // En esta parte eliminamos los saltos de línea para poder revisar correctamente el lexema.
+        //cout<<"Texto antes: "<<texto<<"\n";
+        if(palabra_borrar != std::string::npos){
+            texto.erase(palabra_borrar+1);
+        }
+        //cout<<"Texto después: "<<texto<<"\n";
+        if(regex_match(texto, rex)) {
+            palabra = texto;
+            arreglo_delimitadores[tamanio_arreglo] = palabra;
+            tamanio_arreglo++;
+            cout<<"Match delimitador: "<<palabra<<"\n";
+        }
+    }
+
+    archivo_entrada.close();
+
+    tablaTokens(arreglo_delimitadores, tamanio_arreglo, tipo_token);
 }
 
 
