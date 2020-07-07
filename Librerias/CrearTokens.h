@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <regex>
 #include <fstream>
+#include "Errores.h"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ class CrearTokens
 private:
     /* data */
 public:
+    Errores error;
     ifstream archivo_entrada;
     ofstream archivoEscritura;
     string arreglo_tipo_datos[100];
@@ -237,9 +239,15 @@ void CrearTokens::lexemasIdentificador() {
     }
     while (!archivo_entrada.eof()) {
         getline(archivo_entrada, texto, ' ');
-        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador
+        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador, igual se puede hacer un método
             for (int i = 0; i < tam_datos; i++) {
                 if(texto == arreglo_tipo_datos[i]) {
+                    bandera=false;
+                }
+            }
+            for (int i = 0; i < error.cont_errores+1; i++) {    // Bug: No recibe los datos guardados en el arreglo de errores, al igual que no recibe el contador.
+               // cout<<"Error: "<<error.errores[i]<<"\n";
+                if(texto == error.errores[i]) {
                     bandera=false;
                 }
             }
