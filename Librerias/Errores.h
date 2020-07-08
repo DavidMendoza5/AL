@@ -69,7 +69,7 @@ void Errores::detectarErrores() {
     regex rex_del ("([\\(\\)])");   
     string texto="", datos[100], token = "", descripcion="", palabra=""; 
     int contador=0, palabra_borrar=0;
-    bool bandera_td=false, bandera_id=false, bandera=true;
+    bool bandera_td=false, bandera_id=false, bandera=true, entrar=true;
 
     archivo_entrada.open("Analizador.txt", ios::in);
 
@@ -98,23 +98,43 @@ void Errores::detectarErrores() {
             palabra = texto;
             contador++;
             bandera_td = true;
-            bandera_id = false;
+            //bandera_id = true;
         } 
         if(bandera_td && (palabra != texto)) {
             //cout<<"Texto verificar: "<<texto<<"\n";
-            if(regex_match(texto, rex_id)) {
+            if(regex_match(texto, rex_id) && entrar) {
                 //cout<<"Texto verificar2: "<<texto<<"\n";
-                //bandera_id = true;
-                bandera_td = false;
+                bandera_id = true;
+                entrar = false;
+                //bandera_td = false;
             } else {
+                if(entrar) {
+                    token = "ERLXID";
+                    descripcion = "Error en el identificador";
+                    errores[cont_errores] = texto;   
+                    cont_errores++;
+                    bandera = false;
+                    bandera_td = false;
+                }
+                if(bandera_id && bandera_td) {
+                    if(regex_match(texto, rex_as) || regex_match(texto, rex_del) || regex_match(texto, rex_sep)) {
+                        cout<<"Revisando: "<<texto<<"\n";
+                        bandera_td = false;
+                        bandera_id = false;
+                        entrar = true;
+                    } else {
+                        token = "ERLX";
+                        descripcion = "Error, un identificador debe ser seguido de una coma, paréntesis o una asignación";
+                        errores[cont_errores] = texto;   
+                        cont_errores++;
+                        bandera = false;
+                        bandera_td = false;
+                        bandera_id = false;
+                    }
+                } 
                 //cout<<"Texto verificar3: "<<texto<<"\n";
-                token = "ERLXID";
-                descripcion = "Error en el identificador";
-                errores[cont_errores] = texto;   
-                cont_errores++;
-                bandera = false;
-                bandera_td = false;
             }
+            //bandera_id = false;
         } else{
             if(!bandera_td) {
                 if(regex_match(texto, rex_id)) { 
