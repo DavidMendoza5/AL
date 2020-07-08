@@ -11,24 +11,18 @@ using namespace std;
 class CrearTokens
 {
 private:
-    /* data */
-public:
     ifstream archivo_entrada;
-    ofstream archivoEscritura;
-    string arreglo_tipo_datos[100];
-    string arreglo_tipo_digitos[100];
-    string arreglo_tipo_flotantess[100];
-    string arreglo_aritmetico[100];
-    string arreglo_asignacion[100];
-    string arreglo_identificador[100];
-    string arreglo_operador_relacional[100];
-    string arreglo_delimitadores[100];
-    string arreglo_miscelaneos[100];
-    int tam_datos=0;
+    ofstream archivoEscritura, archivoTokensError;
+    string arreglo_tipo_datos[100], arreglo_tipo_digitos[100], arreglo_tipo_flotantess[100], arreglo_aritmetico[100], arreglo_asignacion[100], 
+        arreglo_identificador[100], arreglo_operador_relacional[100], arreglo_delimitadores[100], arreglo_miscelaneos[100], errores[100];
+    int tam_datos=0, cont_errores=0;
+public:
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
     void analizarLexemas(); // Se encarga de llamar a todas las funciones que analizan los lexemas para que en el main sólo tengamos que llamar a esta función.
     void tablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo TablaTokens.txt
+    void detectarErrores();
+    void tablaTokensError(string *, int, string, string);
     void lexemasDatos();
     void lexemasDigitos();
     void lexemasDigitosFlotantes();
@@ -49,6 +43,7 @@ void CrearTokens::crearArchivo(string nombre_archivo) {
 }
 
 void CrearTokens::analizarLexemas() {
+    detectarErrores();
     lexemasDatos();
     lexemasDigitos();
     lexemasDigitosFlotantes();
@@ -88,6 +83,136 @@ void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token
         }
     }
     archivoEscritura.close();
+}
+
+void CrearTokens::tablaTokensError(string *arreglo, int tamanio_arreglo, string token, string descripcion_error) {
+    int contador=1;
+    //cout<<"Entro\n";
+    archivoEscritura.open("TablaTokens.txt", ios::app);
+    archivoTokensError.open("TablaErrores.txt", ios::app);
+    if (archivoEscritura.fail()) {
+        cout<<"Error al abrir el archivo TablaTokens\n";
+        exit(1);
+    }
+    if (archivoTokensError.fail()) {
+        cout<<"Error al abrir el archivo Tokens\n";
+        exit(1);
+    }
+
+    revisarRepetidos(arreglo, tamanio_arreglo);
+    for (int i = 0; i < tamanio_arreglo; i++) {
+        if(arreglo[i] != ""){
+            archivoEscritura<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<contador<<"\n";
+            archivoTokensError<<"Lexema: "<<arreglo[i]<<"\t\tToken: "<<token<<contador<<"\t\tDescripción: "<<descripcion_error<<"\n";
+            contador++;  
+        }
+    }
+    archivoEscritura.close();
+    archivoTokensError.close();
+}
+
+void CrearTokens::detectarErrores() {   // Hace falta revisar si al poner un número junto con una letra, marca error
+    regex rex_errores ("([-0-9][a-zA-Z_$0-9]+)");
+    regex rex_td ("(int|string|void|long|char|double|float|short|boolean)");
+    regex rex_id ("([a-zA-Z_$][a-zA-Z_$0-9]*)");
+    regex rex_as ("([*/%+-]?=)");
+    regex rex_sep ("([;,])"); 
+    regex rex_del ("([\\(\\)])");   
+    string texto="", datos[100], token = "", descripcion="", palabra=""; 
+    int contador=0, palabra_borrar=0;
+    bool bandera_td=false, bandera_id=false, bandera=true, entrar=true;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo Analizador\n";
+        exit(1);
+    }
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+
+        palabra_borrar= texto.find_last_not_of("\n");  
+        if(palabra_borrar != std::string::npos){
+            texto.erase(palabra_borrar+1);
+        }
+
+        if(regex_match(texto, rex_errores)) {   // Hay un bug en el que si pones mal un TD y luego pones un id no válido (que entre a este if), sólo detecta el segundo error
+            token = "ERLXID";
+            descripcion = "Error en el identificador";
+            errores[cont_errores] = texto;   
+            cont_errores++;
+            bandera = false;
+        }
+
+        if(regex_match(texto, rex_td)) {
+            datos[contador] = "TD";
+            palabra = texto;
+            contador++;
+            bandera_td = true;
+            //bandera_id = true;
+        } 
+        if(bandera_td && (palabra != texto)) {
+            //cout<<"Texto verificar: "<<texto<<"\n";
+            if(regex_match(texto, rex_id) && entrar) {
+                //cout<<"Texto verificar2: "<<texto<<"\n";
+                bandera_id = true;
+                entrar = false;
+                //bandera_td = false;
+            } else {
+                if(entrar) {
+                    token = "ERLXID";
+                    descripcion = "Error en el identificador";
+                    errores[cont_errores] = texto;   
+                    cont_errores++;
+                    bandera = false;
+                    bandera_td = false;
+                }
+                if(bandera_id && bandera_td) {
+                    if(regex_match(texto, rex_as) || regex_match(texto, rex_del) || regex_match(texto, rex_sep)) {
+                        cout<<"Revisando: "<<texto<<"\n";
+                        bandera_td = false;
+                        bandera_id = false;
+                        entrar = true;
+                    } else {
+                        token = "ERLX";
+                        descripcion = "Error, un identificador debe ser seguido de una coma, paréntesis o una asignación";
+                        errores[cont_errores] = texto;   
+                        cont_errores++;
+                        bandera = false;
+                        bandera_td = false;
+                        bandera_id = false;
+                    }
+                } 
+                //cout<<"Texto verificar3: "<<texto<<"\n";
+            }
+            //bandera_id = false;
+        } else{
+            if(!bandera_td) {
+                if(regex_match(texto, rex_id)) { 
+                    cout<<"Texto entrante: "<<texto<<" "<<bandera_id<<"\n";
+                    if(bandera_id) {
+                        token = "ERLXTD";
+                        descripcion = "Error en el tipo de dato, la palabra reservada no es válida";
+                        errores[cont_errores] = palabra;
+                        cout<<"Palabra error: "<<palabra<<" "<<bandera_id<<"\n";   
+                        cont_errores++;
+                        bandera = false;
+                        bandera_id = false;
+                    } else {
+                        palabra = texto;
+                        bandera_id = true;
+                    }
+                } else {
+                    bandera_id = false;
+                }
+            }
+        }
+    }
+    archivo_entrada.close();
+    for (int i = 0; i < cont_errores; i++) {
+        cout<<"Arreglo errores: "<<errores[i]<<"\n";   
+    }
+    if(!bandera)tablaTokensError(errores, cont_errores, token, descripcion);
 }
 
 void CrearTokens::lexemasDatos() {
@@ -237,9 +362,15 @@ void CrearTokens::lexemasIdentificador() {
     }
     while (!archivo_entrada.eof()) {
         getline(archivo_entrada, texto, ' ');
-        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador
+        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador, igual se puede hacer un método
             for (int i = 0; i < tam_datos; i++) {
                 if(texto == arreglo_tipo_datos[i]) {
+                    bandera=false;
+                }
+            }
+            for (int i = 0; i < cont_errores; i++) {    // Bug: No recibe los datos guardados en el arreglo de errores, al igual que no recibe el contador.
+               // cout<<"Error: "<<error.errores[i]<<"\n";
+                if(texto == errores[i]) {
                     bandera=false;
                 }
             }

@@ -9,6 +9,7 @@ int main() {
     tokens.crearArchivo(tabla_tokens);
     tokens.crearArchivo(token_error);
     tokens.crearArchivo(archivo_tokens);
+
 // Función que llama a todas las otras funciones que analizan los lexemas y escriben los resultados en el archivo TablaTokens.txt
     tokens.analizarLexemas();
 
