@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <regex>
 #include <fstream>
-#include "Errores.h"
 
 using namespace std;
 
