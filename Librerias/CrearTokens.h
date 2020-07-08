@@ -12,21 +12,12 @@ using namespace std;
 class CrearTokens
 {
 private:
-    /* data */
-public:
-    Errores error;
     ifstream archivo_entrada;
     ofstream archivoEscritura;
-    string arreglo_tipo_datos[100];
-    string arreglo_tipo_digitos[100];
-    string arreglo_tipo_flotantess[100];
-    string arreglo_aritmetico[100];
-    string arreglo_asignacion[100];
-    string arreglo_identificador[100];
-    string arreglo_operador_relacional[100];
-    string arreglo_delimitadores[100];
-    string arreglo_miscelaneos[100];
+    string arreglo_tipo_datos[100], arreglo_tipo_digitos[100], arreglo_tipo_flotantess[100], arreglo_aritmetico[100], arreglo_asignacion[100], 
+        arreglo_identificador[100], arreglo_operador_relacional[100], arreglo_delimitadores[100], arreglo_miscelaneos[100];
     int tam_datos=0;
+public:
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
     void analizarLexemas(); // Se encarga de llamar a todas las funciones que analizan los lexemas para que en el main sólo tengamos que llamar a esta función.
@@ -245,12 +236,12 @@ void CrearTokens::lexemasIdentificador() {
                     bandera=false;
                 }
             }
-            for (int i = 0; i < error.cont_errores+1; i++) {    // Bug: No recibe los datos guardados en el arreglo de errores, al igual que no recibe el contador.
+            /*for (int i = 0; i < error.cont_errores+1; i++) {    // Bug: No recibe los datos guardados en el arreglo de errores, al igual que no recibe el contador.
                // cout<<"Error: "<<error.errores[i]<<"\n";
                 if(texto == error.errores[i]) {
                     bandera=false;
                 }
-            }
+            }*/
             if(bandera) {
                 palabra = texto;
                 arreglo_identificador[tamanio_arreglo] = palabra;
