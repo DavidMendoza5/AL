@@ -11,12 +11,11 @@ using namespace std;
 class Errores
 {
 private:
-    /* data */
-public:
     ifstream archivo_entrada;
     ofstream archivoEscritura,archivoTokensError;
     string errores[100];
     int cont_errores=0;
+public:
     void detectarErrores(); // Una idea es hacer otra función para ser llamada por el main y dicha función llame a este, pero pasando como parámetro el arreglo
     void revisarRepetidos(string *, int);
     void tablaTokens(string *, int, string, string);
@@ -60,7 +59,7 @@ void Errores::tablaTokens(string *arreglo, int tamanio_arreglo, string token, st
     archivoTokensError.close();
 }
 
-void Errores::detectarErrores() {
+void Errores::detectarErrores() {   // Hace falta revisar si al poner un número junto con una letra, marca error
     regex rex_errores ("([-0-9][a-zA-Z_$0-9]+)");
     regex rex_td ("(int|string|void|long|char|double|float|short|boolean)");
     regex rex_id ("([a-zA-Z_$][a-zA-Z_$0-9]*)");
