@@ -15,7 +15,8 @@ private:
     ofstream archivoEscritura, archivoTokensError;
     string arreglo_tipo_datos[100], arreglo_tipo_digitos[100], arreglo_tipo_flotantess[100], arreglo_aritmetico[100], arreglo_asignacion[100], 
         arreglo_identificador[100], arreglo_operador_relacional[100], arreglo_delimitadores[100], arreglo_miscelaneos[100], errores[100];
-    int tam_datos=0, cont_errores=0;
+    string lexemas="";
+    int tam_datos=0, cont_errores=0; 
 public:
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
@@ -23,6 +24,7 @@ public:
     void tablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo TablaTokens.txt
     void detectarErrores();
     void tablaTokensError(string *, int, string, string);
+    void crearArchivoTokens();
     void lexemasDatos();
     void lexemasDigitos();
     void lexemasDigitosFlotantes();
@@ -32,6 +34,7 @@ public:
     void lexemasOperadoresRel();
     void lexemasDelimitadores();
     void lexemasMiscelaneos();
+    void reemplazarLexemas(regex, string);
 };
 
 void CrearTokens::crearArchivo(string nombre_archivo) {
@@ -44,6 +47,7 @@ void CrearTokens::crearArchivo(string nombre_archivo) {
 
 void CrearTokens::analizarLexemas() {
     detectarErrores();
+    crearArchivoTokens();
     lexemasDatos();
     lexemasDigitos();
     lexemasDigitosFlotantes();
@@ -362,14 +366,13 @@ void CrearTokens::lexemasIdentificador() {
     }
     while (!archivo_entrada.eof()) {
         getline(archivo_entrada, texto, ' ');
-        if(regex_match(texto, rex)) {   // Se debe agregar un ciclo for por cada arrreglo de palabras reservadas que no debe tomar como identificador, igual se puede hacer un método
+        if(regex_match(texto, rex)) {   // Se puede hacer un método
             for (int i = 0; i < tam_datos; i++) {
                 if(texto == arreglo_tipo_datos[i]) {
                     bandera=false;
                 }
             }
-            for (int i = 0; i < cont_errores; i++) {    // Bug: No recibe los datos guardados en el arreglo de errores, al igual que no recibe el contador.
-               // cout<<"Error: "<<error.errores[i]<<"\n";
+            for (int i = 0; i < cont_errores; i++) {   
                 if(texto == errores[i]) {
                     bandera=false;
                 }
@@ -477,6 +480,138 @@ void CrearTokens::lexemasMiscelaneos() {
     archivo_entrada.close();
 
     tablaTokens(arreglo_miscelaneos, tamanio_arreglo, tipo_token);
+}
+
+void CrearTokens::reemplazarLexemas(regex rex, string token) {  // El problema con este método es que no realiza bien su trabajo con ID y con CNE
+    smatch matches;
+    string revisar_palabra="";
+    int contador_tokens=0, cont_inicio=0, cont_final=0;
+    while(regex_search(lexemas,matches,rex)) {
+        // Se puede hacer un ciclo que revise el arreglo de errores para que no se contabilice como un identificador
+        if(revisar_palabra!= matches.str()) {
+            revisar_palabra=matches.str();
+            contador_tokens++;
+        }
+        cont_inicio=lexemas.find(matches.str());
+        cont_final=matches.str().length();
+        lexemas.replace(cont_inicio,cont_final,token+to_string(contador_tokens));
+    }
+}
+
+void CrearTokens::crearArchivoTokens() {
+    regex rex_identificador ("([a-zA-Z_$][a-zA-Z_$0-9]*)");
+    regex rex_td ("(int|string|void|long|char|double|float|short|boolean)");
+    regex rex_miscelaneos ("([,;:])");
+    regex rex_del ("([\\[\\{\\}\\]\\)\\(])"); 
+    regex rex_operadores ("([<|>|!][=]?)");
+    regex rex_asignacion ("([*/%+-]?=)");
+    regex rex_aritmeticos ("([*/%+-])");
+    regex rex_flotantes ("([0-9]+\\.[0-9]+)");
+    regex rex_digitos ("(-?[0-9]+)");
+    string texto="", token="", palabras=""; // lexemas="",
+    int cont_inicio=0, cont_final=0, contador_tokens=0, palabra_borrar=0, salto_linea=0;
+    bool bandera_salto_linea=true, bandera_error=false;
+
+    archivo_entrada.open("Analizador.txt", ios::in);
+
+    if (archivo_entrada.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+
+    while (!archivo_entrada.eof()) {
+        getline(archivo_entrada, texto, ' ');
+        if(regex_match(texto, rex_td)) {    // Este método de los if es muy repetitivo pero se pueden manejar errores a diferencia del otro método,
+                                            // lo malo es que no tiene contador de tokens.
+            lexemas+="TD";
+            bandera_salto_linea=false;
+        } else {
+            if(regex_match(texto, rex_identificador)){
+                for (int i = 0; i < cont_errores; i++) {
+                    if(texto == errores[i]) {
+                        bandera_error=true;
+                    }
+                }
+                if(bandera_error) {
+                    lexemas+="ERLX";
+                    bandera_salto_linea=false;
+                } else {
+                    lexemas+="ID";
+                    bandera_salto_linea=false;
+                }
+                bandera_error=false;
+            }
+        }
+        if(regex_match(texto, rex_miscelaneos)) {
+            lexemas+="SEP";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_del)) {
+            lexemas+="DEL";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_operadores)) {
+            lexemas+="OR";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_asignacion)) {
+            lexemas+="AS";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_aritmeticos)) {
+            lexemas+="OA";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_digitos)) {
+            lexemas+="CNE";
+            bandera_salto_linea=false;
+        }
+        if(regex_match(texto, rex_flotantes)) {
+            lexemas+="CNPF";
+            bandera_salto_linea=false;
+        }
+        if(bandera_salto_linea) {
+            palabra_borrar= texto.find_last_not_of("\n"); 
+            if(palabra_borrar != std::string::npos){
+                texto.erase(palabra_borrar+1);
+            }
+            if(regex_match(texto, rex_miscelaneos)) {
+                lexemas+="SEP\n";
+            } else {
+                if(regex_match(texto, rex_del)) {
+                lexemas+="DEL\n";
+                } else {
+                    for (int i = 0; i < cont_errores; i++) {
+                        if(texto == errores[i]) {
+                            lexemas+="ERLX";
+                        }
+                    }
+                    
+                }
+            }
+            //lexemas += texto;
+        }
+        bandera_salto_linea=true;
+    }
+    archivo_entrada.close();
+    //reemplazarLexemas(rex_identificador, "ID");
+    //reemplazarLexemas(rex_digitos, "CNE");
+    //reemplazarLexemas(rex_td, "TD");
+    /*reemplazarLexemas(rex_miscelaneos, "SEP");
+    reemplazarLexemas(rex_del, "DEL");
+    reemplazarLexemas(rex_operadores, "OR");
+    reemplazarLexemas(rex_asignacion, "AS");
+    reemplazarLexemas(rex_aritmeticos, "OA");
+    reemplazarLexemas(rex_flotantes, "CNPF");*/
+    //cout<<"Lexemas: "<<lexemas<<"\n";
+    archivoEscritura.open("Tokens.txt", ios::app); 
+    if (archivoEscritura.fail()) {
+        cout<<"Error al abrir el archivo\n";
+        exit(1);
+    }
+    archivoEscritura<<lexemas;
+
+    archivoEscritura.close();
 }
 
 
