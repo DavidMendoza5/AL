@@ -21,19 +21,19 @@ public:
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
     void analizarLexemas(); // Se encarga de llamar a todas las funciones que analizan los lexemas para que en el main sólo tengamos que llamar a esta función.
-    void tablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo TablaTokens.txt
+    void crearTablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo crearTtxt
     void detectarErrores();
-    void tablaTokensError(string *, int, string, string);
+    void crearTablaTokensError(string *, int, string, string);
     void crearArchivoTokens();
-    void lexemasDatos();
-    void lexemasDigitos();
-    void lexemasDigitosFlotantes();
-    void lexemasAritmeticos();
-    void lexemasAsignacion();
-    void lexemasIdentificador();
-    void lexemasOperadoresRel();
-    void lexemasDelimitadores();
-    void lexemasMiscelaneos();
+    void crearLexemasDatos();
+    void crearLexemasDigitos();
+    void crearLexemasDigitosFlotantes();
+    void crearLexemasAritmeticos();
+    void crearLexemasAsignacion();
+    void crearLexemasIdentificador();
+    void crearLexemasOperadoresRel();
+    void crearLexemasDelimitadores();
+    void crearLexemasMiscelaneos();
     void reemplazarLexemas(regex, string);
 };
 
@@ -48,15 +48,15 @@ void CrearTokens::crearArchivo(string nombre_archivo) {
 void CrearTokens::analizarLexemas() {
     detectarErrores();
     crearArchivoTokens();
-    lexemasDatos();
-    lexemasDigitos();
-    lexemasDigitosFlotantes();
-    lexemasAritmeticos();
-    lexemasAsignacion();
-    lexemasIdentificador();
-    lexemasOperadoresRel();
-    lexemasDelimitadores();
-    lexemasMiscelaneos();
+    crearLexemasDatos();
+    crearLexemasDigitos();
+    crearLexemasDigitosFlotantes();
+    crearLexemasAritmeticos();
+    crearLexemasAsignacion();
+    crearLexemasIdentificador();
+    crearLexemasOperadoresRel();
+    crearLexemasDelimitadores();
+    crearLexemasMiscelaneos();
 }
 
 void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
@@ -71,7 +71,7 @@ void CrearTokens::revisarRepetidos(string *arreglo, int tamanio_arreglo) {
     }
 }
 
-void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token) {
+void CrearTokens::crearTablaTokens(string *arreglo, int tamanio_arreglo, string token) {
     int contador=1;
     archivoEscritura.open("TablaTokens.txt", ios::app); 
     if (archivoEscritura.fail()) {
@@ -89,7 +89,7 @@ void CrearTokens::tablaTokens(string *arreglo, int tamanio_arreglo, string token
     archivoEscritura.close();
 }
 
-void CrearTokens::tablaTokensError(string *arreglo, int tamanio_arreglo, string token, string descripcion_error) {
+void CrearTokens::crearTablaTokensError(string *arreglo, int tamanio_arreglo, string token, string descripcion_error) {
     int contador=1;
     //cout<<"Entro\n";
     archivoEscritura.open("TablaTokens.txt", ios::app);
@@ -216,10 +216,10 @@ void CrearTokens::detectarErrores() {   // Hace falta revisar si al poner un nú
     for (int i = 0; i < cont_errores; i++) {
         cout<<"Arreglo errores: "<<errores[i]<<"\n";   
     }
-    if(!bandera)tablaTokensError(errores, cont_errores, token, descripcion);
+    if(!bandera)crearTablaTokensError(errores, cont_errores, token, descripcion);
 }
 
-void CrearTokens::lexemasDatos() {
+void CrearTokens::crearLexemasDatos() {
     //smatch matches;
     regex rex ("(int|string|void|long|char|double|float|short|boolean)");
     string texto="", palabra="", tipo_token="TD";    //analizar="",
@@ -246,10 +246,10 @@ void CrearTokens::lexemasDatos() {
     tam_datos = tamanio_arreglo;
     //cout<<"Analizar: "<<analizar<<"\n";
 
-    tablaTokens(arreglo_tipo_datos, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_tipo_datos, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasDigitos() {
+void CrearTokens::crearLexemasDigitos() {
     regex rex ("(-?[0-9]+)");
     string texto="", palabra="", tipo_token="CNE"; 
     int tamanio_arreglo=0;
@@ -271,10 +271,10 @@ void CrearTokens::lexemasDigitos() {
     }
 
     archivo_entrada.close();
-    tablaTokens(arreglo_tipo_digitos, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_tipo_digitos, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasDigitosFlotantes() {
+void CrearTokens::crearLexemasDigitosFlotantes() {
     regex rex ("([0-9]+\\.[0-9]+)");
     string texto="", palabra="", tipo_token="CNPF"; 
     int tamanio_arreglo=0;
@@ -297,10 +297,10 @@ void CrearTokens::lexemasDigitosFlotantes() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_tipo_flotantess, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_tipo_flotantess, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasAritmeticos() {
+void CrearTokens::crearLexemasAritmeticos() {
     regex rex ("([*/%+-])");
     string texto="", palabra="", tipo_token="OA"; 
     int tamanio_arreglo=0;
@@ -323,10 +323,10 @@ void CrearTokens::lexemasAritmeticos() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_aritmetico, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_aritmetico, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasAsignacion() {
+void CrearTokens::crearLexemasAsignacion() {
     regex rex ("([*/%+-]?=)");
     string texto="", palabra="", tipo_token="AS"; 
     int tamanio_arreglo=0;
@@ -349,10 +349,10 @@ void CrearTokens::lexemasAsignacion() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_asignacion, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_asignacion, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasIdentificador() {
+void CrearTokens::crearLexemasIdentificador() {
     regex rex ("([a-zA-Z_$][a-zA-Z_$0-9]*)");
     string texto="", palabra="", tipo_token="ID"; 
     int tamanio_arreglo=0;
@@ -389,10 +389,10 @@ void CrearTokens::lexemasIdentificador() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_identificador, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_identificador, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasOperadoresRel() {
+void CrearTokens::crearLexemasOperadoresRel() {
     regex rex ("([<|>|!][=]?)");
     string texto="", palabra="", tipo_token="OR"; 
     int tamanio_arreglo=0;
@@ -415,10 +415,10 @@ void CrearTokens::lexemasOperadoresRel() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_operador_relacional, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_operador_relacional, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasDelimitadores() {
+void CrearTokens::crearLexemasDelimitadores() {
     regex rex ("([\\[\\{\\}\\]\\)\\(])");   
     string texto="", palabra="", tipo_token="DEL"; 
     int tamanio_arreglo=0, palabra_borrar=0;
@@ -447,10 +447,10 @@ void CrearTokens::lexemasDelimitadores() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_delimitadores, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_delimitadores, tamanio_arreglo, tipo_token);
 }
 
-void CrearTokens::lexemasMiscelaneos() {
+void CrearTokens::crearLexemasMiscelaneos() {
     regex rex ("([,;:])");   
     string texto="", palabra="", tipo_token="SEP"; 
     int tamanio_arreglo=0, palabra_borrar=0;
@@ -479,7 +479,7 @@ void CrearTokens::lexemasMiscelaneos() {
 
     archivo_entrada.close();
 
-    tablaTokens(arreglo_miscelaneos, tamanio_arreglo, tipo_token);
+    crearTablaTokens(arreglo_miscelaneos, tamanio_arreglo, tipo_token);
 }
 
 void CrearTokens::reemplazarLexemas(regex rex, string token) {  // El problema con este método es que no realiza bien su trabajo con ID y con CNE
