@@ -21,7 +21,7 @@ public:
     void crearArchivo(string);  // Crea los txt que envía el main.
     void revisarRepetidos(string *, int);   // Se encarga de revisar si se repitieron los lexemas, ya que en el archivo de TablaTokens no se permite que se repitan.
     void analizarLexemas(); // Se encarga de llamar a todas las funciones que analizan los lexemas para que en el main sólo tengamos que llamar a esta función.
-    void crearTablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo crearTtxt
+    void crearTablaTokens(string *, int, string);    // Función que inserta el lexema sin repetir junto con su respectivo token en el archivo TablaTokens.txt
     void detectarErrores();
     void crearTablaTokensError(string *, int, string, string);
     void crearArchivoTokens();
