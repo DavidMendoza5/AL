@@ -1,5 +1,4 @@
 #ifndef CrearTokens_H
-#define CrearTokens_H
 
 #include <iostream>
 #include <stdlib.h>
